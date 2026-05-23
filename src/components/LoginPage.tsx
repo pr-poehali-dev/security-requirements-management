@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,15 +8,28 @@ import Icon from '@/components/ui/icon';
 
 export function LoginPage() {
   const login = useStore(s => s.login);
+  const currentUser = useStore(s => s.currentUser);
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  if (currentUser) {
+    return <Navigate to={currentUser.role === 'administrator' ? '/admin/org-domains' : '/library/org-domains'} replace />;
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const ok = login(username, password);
-    if (!ok) setError('Неверный логин или пароль');
-    else setError('');
+    if (!ok) {
+      setError('Неверный логин или пароль');
+    } else {
+      setError('');
+      const user = useStore.getState().currentUser;
+      if (user) {
+        navigate(user.role === 'administrator' ? '/admin/org-domains' : '/library/org-domains', { replace: true });
+      }
+    }
   };
 
   return (
